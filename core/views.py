@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
-from .serializers import ProposalListSerializer
+from .serializers import ProposalListSerializer, ProposalCreateSerializer, ProposalSerializer
 from .models import Proposal
+
 
 
 class ProposalListAPIView(APIView):
@@ -12,3 +14,24 @@ class ProposalListAPIView(APIView):
 
         return Response(data=proposals_json.data)
 
+
+class ProposalCreateAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        data = request.POST
+        serializer = ProposalCreateSerializer(data=data)
+
+        if serializer.is_valid():
+            proposal = serializer.save()
+            json_data = ProposalSerializer(instance=proposal)
+
+            return Response(json_data.data, 201)
+        return Response(data={
+            'message': 'Data not valid',
+            'errors': serializer.errors
+            }, 
+            status=400)
+
+
+class ProposalRetrieveAPIView(RetrieveAPIView):
+    queryset = Proposal.objects.all()
+    serializer_class = ProposalSerializer
